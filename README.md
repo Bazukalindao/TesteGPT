@@ -1,29 +1,71 @@
+local ScreenGui = Instance.new("ScreenGui", game.Players.LocalPlayer:WaitForChild("PlayerGui"))
+ScreenGui.Name = "PainelESP"
+
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Name = "ESP TESTE"
+Frame.Size = UDim2.new(0, 300, 0, 130)
+Frame.Position = UDim2.new(0.5, -150, 0.2, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(128, 0, 255)
+Frame.Active = true
+Frame.Draggable = true
+Frame.BorderSizePixel = 0
+Frame.BackgroundTransparency = 0.05
+
+local CloseBtn = Instance.new("TextButton", Frame)
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -35, 0, 5)
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.new(1, 1, 1)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextScaled = true
+CloseBtn.BorderSizePixel = 0
+
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+local AtivarBtn = Instance.new("TextButton", Frame)
+AtivarBtn.Size = UDim2.new(0, 260, 0, 60)
+AtivarBtn.Position = UDim2.new(0.5, -130, 0.5, -10)
+AtivarBtn.Text = "Ativar ESP"
+AtivarBtn.TextColor3 = Color3.new(1, 1, 1)
+AtivarBtn.BackgroundColor3 = Color3.fromRGB(85, 0, 170)
+AtivarBtn.Font = Enum.Font.GothamBold
+AtivarBtn.TextScaled = true
+AtivarBtn.BorderSizePixel = 0
+
 local function criarESP(player)
     if player.Character then
-        for _, part in pairs(player.Character:GetDescendants()) do
-            if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-                local highlight = Instance.new("BoxHandleAdornment")
-                highlight.Adornee = part
-                highlight.AlwaysOnTop = true
-                highlight.ZIndex = 5
-                highlight.Size = part.Size
-                highlight.Transparency = 0.8
-                highlight.Color3 = Color3.new(1, 1, 1)
-                highlight.Name = "ESP_Marcado"
-                highlight.Parent = part
-            end
+        if not player.Character:FindFirstChild("ESP_Highlight") then
+            local highlight = Instance.new("Highlight")
+            highlight.Name = "ESP_Highlight"
+            highlight.FillColor = Color3.new(1, 1, 1)
+            highlight.FillTransparency = 0.7
+            highlight.OutlineTransparency = 1
+            highlight.Adornee = player.Character
+            highlight.Parent = player.Character
         end
-    end
-end
 
-local function removerESP(player)
-    if player.Character then
-        for _, part in pairs(player.Character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                local antigoESP = part:FindFirstChild("ESP_Marcado")
-                if antigoESP then
-                    antigoESP:Destroy()
-                end
+        if not player.Character:FindFirstChild("ESP_Nome") then
+            local head = player.Character:FindFirstChild("Head")
+            if head then
+                local billboard = Instance.new("BillboardGui")
+                billboard.Name = "ESP_Nome"
+                billboard.Adornee = head
+                billboard.Size = UDim2.new(0, 200, 0, 50)
+                billboard.StudsOffset = Vector3.new(0, 2, 0)
+                billboard.AlwaysOnTop = true
+                billboard.Parent = player.Character
+
+                local texto = Instance.new("TextLabel", billboard)
+                texto.Size = UDim2.new(1, 0, 1, 0)
+                texto.BackgroundTransparency = 1
+                texto.Text = player.Name
+                texto.TextColor3 = Color3.new(1, 1, 1)
+                texto.TextStrokeTransparency = 0.5
+                texto.TextScaled = true
+                texto.Font = Enum.Font.GothamBold
             end
         end
     end
@@ -41,73 +83,4 @@ local function ativarESP()
     end
 end
 
-local function desativarESP()
-    for _, player in pairs(game:GetService("Players"):GetPlayers()) do
-        if player ~= game.Players.LocalPlayer then
-            removerESP(player)
-        end
-    end
-end
-
-local function criarPainel()
-    local gui = Instance.new("ScreenGui", game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"))
-    gui.Name = "PainelESP"
-
-    local frame = Instance.new("Frame", gui)
-    frame.Size = UDim2.new(0, 260, 0, 130)
-    frame.Position = UDim2.new(0.5, -130, 0.2, 0)
-    frame.BackgroundColor3 = Color3.fromRGB(60, 0, 100)
-    frame.Active = true
-    frame.Draggable = true
-    frame.BorderSizePixel = 0
-
-    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
-
-    local titulo = Instance.new("TextLabel", frame)
-    titulo.Text = "TESTE ESP"
-    titulo.Size = UDim2.new(1, -40, 0, 30)
-    titulo.Position = UDim2.new(0, 10, 0, 5)
-    titulo.BackgroundTransparency = 1
-    titulo.TextColor3 = Color3.new(1, 1, 1)
-    titulo.TextScaled = true
-    titulo.Font = Enum.Font.GothamBold
-
-    local fechar = Instance.new("TextButton", frame)
-    fechar.Text = "X"
-    fechar.Size = UDim2.new(0, 30, 0, 30)
-    fechar.Position = UDim2.new(1, -35, 0, 5)
-    fechar.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
-    fechar.TextColor3 = Color3.new(1, 1, 1)
-    fechar.Font = Enum.Font.GothamBold
-    fechar.TextScaled = true
-    Instance.new("UICorner", fechar).CornerRadius = UDim.new(0, 8)
-
-    fechar.MouseButton1Click:Connect(function()
-        gui:Destroy()
-    end)
-
-    local botaoAtivar = Instance.new("TextButton", frame)
-    botaoAtivar.Text = "Ativar ESP"
-    botaoAtivar.Size = UDim2.new(0.5, -15, 0, 40)
-    botaoAtivar.Position = UDim2.new(0, 10, 0, 45)
-    botaoAtivar.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
-    botaoAtivar.TextColor3 = Color3.new(1, 1, 1)
-    botaoAtivar.Font = Enum.Font.GothamBold
-    botaoAtivar.TextScaled = true
-    Instance.new("UICorner", botaoAtivar).CornerRadius = UDim.new(0, 8)
-
-    local botaoDesativar = Instance.new("TextButton", frame)
-    botaoDesativar.Text = "Desativar ESP"
-    botaoDesativar.Size = UDim2.new(0.5, -15, 0, 40)
-    botaoDesativar.Position = UDim2.new(0.5, 5, 0, 45)
-    botaoDesativar.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
-    botaoDesativar.TextColor3 = Color3.new(1, 1, 1)
-    botaoDesativar.Font = Enum.Font.GothamBold
-    botaoDesativar.TextScaled = true
-    Instance.new("UICorner", botaoDesativar).CornerRadius = UDim.new(0, 8)
-
-    botaoAtivar.MouseButton1Click:Connect(ativarESP)
-    botaoDesativar.MouseButton1Click:Connect(desativarESP)
-end
-
-criarPainel()
+AtivarBtn.MouseButton1Click:Connect(ativarESP)
