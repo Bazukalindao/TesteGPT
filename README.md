@@ -1,78 +1,97 @@
--- Universal Mobile Fly Script com Botões Fly/Stop
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local StarterGui = game:GetService("StarterGui")
-
-local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+local ScreenGui = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local FlyButton = Instance.new("TextButton")
+local SpeedUp = Instance.new("TextButton")
+local SpeedDown = Instance.new("TextButton")
+local SpeedDisplay = Instance.new("TextLabel")
+local CloseButton = Instance.new("TextButton")
 
 local flying = false
-local speed = 40
-local bodyGyro, bodyVelocity
+local speed = 50
 
--- Criar botões na tela
-local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-screenGui.Name = "FlyGUI"
+ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+Frame.Parent = ScreenGui
+Frame.Size = UDim2.new(0, 200, 0, 120)
+Frame.Position = UDim2.new(0.4, 0, 0.3, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Frame.BorderSizePixel = 2
 
-local flyButton = Instance.new("TextButton", screenGui)
-flyButton.Size = UDim2.new(0, 120, 0, 50)
-flyButton.Position = UDim2.new(0.05, 0, 0.8, 0)
-flyButton.Text = "Fly"
-flyButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
-flyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-flyButton.TextScaled = true
-flyButton.Font = Enum.Font.SourceSansBold
-flyButton.Visible = true
+CloseButton.Parent = Frame
+CloseButton.Size = UDim2.new(0, 40, 0, 30)
+CloseButton.Position = UDim2.new(0, 0, 0, 0)
+CloseButton.Text = "X"
+CloseButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
 
-local stopButton = Instance.new("TextButton", screenGui)
-stopButton.Size = UDim2.new(0, 120, 0, 50)
-stopButton.Position = UDim2.new(0.05, 0, 0.88, 0)
-stopButton.Text = "Stop Fly"
-stopButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-stopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-stopButton.TextScaled = true
-stopButton.Font = Enum.Font.SourceSansBold
-stopButton.Visible = true
+FlyButton.Parent = Frame
+FlyButton.Size = UDim2.new(0, 100, 0, 30)
+FlyButton.Position = UDim2.new(0, 50, 0, 0)
+FlyButton.Text = "Fastz Hub"
+FlyButton.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
 
--- Funções Fly
-local function startFly()
-    if flying then return end
-    flying = true
+SpeedUp.Parent = Frame
+SpeedUp.Size = UDim2.new(0, 40, 0, 30)
+SpeedUp.Position = UDim2.new(0, 0, 0, 40)
+SpeedUp.Text = "+"
+
+SpeedDown.Parent = Frame
+SpeedDown.Size = UDim2.new(0, 40, 0, 30)
+SpeedDown.Position = UDim2.new(0, 50, 0, 40)
+SpeedDown.Text = "-"
+
+SpeedDisplay.Parent = Frame
+SpeedDisplay.Size = UDim2.new(0, 100, 0, 30)
+SpeedDisplay.Position = UDim2.new(0, 100, 0, 40)
+SpeedDisplay.Text = tostring(speed)
+SpeedDisplay.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
+
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+SpeedUp.MouseButton1Click:Connect(function()
+    speed = speed + 10
+    SpeedDisplay.Text = tostring(speed)
+end)
+
+SpeedDown.MouseButton1Click:Connect(function()
+    if speed > 10 then
+        speed = speed - 10
+        SpeedDisplay.Text = tostring(speed)
+    end
+end)
+
+FlyButton.MouseButton1Click:Connect(function()
+    local character = game.Players.LocalPlayer.Character
+    local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
     
-    bodyGyro = Instance.new("BodyGyro")
-    bodyGyro.P = 9e4
-    bodyGyro.Parent = humanoidRootPart
-
-    bodyVelocity = Instance.new("BodyVelocity")
-    bodyVelocity.Velocity = Vector3.zero
-    bodyVelocity.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-    bodyVelocity.Parent = humanoidRootPart
-end
-
-local function stopFly()
-    flying = false
-    if bodyGyro then bodyGyro:Destroy() end
-    if bodyVelocity then bodyVelocity:Destroy() end
-end
-
--- Conectar botões
-flyButton.MouseButton1Click:Connect(function()
-    startFly()
+    if humanoidRootPart then
+        flying = not flying
+        
+        if flying then
+            humanoidRootPart.Anchored = false
+            local bodyForce = Instance.new("BodyForce")
+            bodyForce.Name = "FlyForce"
+            bodyForce.Force = Vector3.new(0, workspace.Gravity * humanoidRootPart.AssemblyMass + speed, 0)
+            bodyForce.Parent = humanoidRootPart
+        else
+            local existingForce = humanoidRootPart:FindFirstChild("FlyForce")
+            if existingForce then
+                existingForce:Destroy()
+            end
+        end
+    end
 end)
 
-stopButton.MouseButton1Click:Connect(function()
-    stopFly()
-end)
-
--- Atualizar Fly
-RunService.RenderStepped:Connect(function()
-    if flying and bodyVelocity and bodyGyro then
-        local cam = workspace.CurrentCamera
-        local moveDirection = cam.CFrame.LookVector
-
-        bodyVelocity.Velocity = moveDirection * speed
-        bodyGyro.CFrame = cam.CFrame
+game:GetService("RunService").Heartbeat:Connect(function()
+    if flying then
+        local character = game.Players.LocalPlayer.Character
+        local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+        
+        if humanoidRootPart then
+            local flyForce = humanoidRootPart:FindFirstChild("FlyForce")
+            if flyForce then
+                flyForce.Force = Vector3.new(0, workspace.Gravity * humanoidRootPart.AssemblyMass + speed, 0)
+            end
+        end
     end
 end)
