@@ -1,86 +1,78 @@
-local ScreenGui = Instance.new("ScreenGui", game.Players.LocalPlayer:WaitForChild("PlayerGui"))
-ScreenGui.Name = "PainelESP"
+-- Universal Mobile Fly Script com Botões Fly/Stop
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
 
-local Frame = Instance.new("Frame", ScreenGui)
-Frame.Name = "ESP TESTE"
-Frame.Size = UDim2.new(0, 300, 0, 130)
-Frame.Position = UDim2.new(0.5, -150, 0.2, 0)
-Frame.BackgroundColor3 = Color3.fromRGB(128, 0, 255)
-Frame.Active = true
-Frame.Draggable = true
-Frame.BorderSizePixel = 0
-Frame.BackgroundTransparency = 0.05
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
-local CloseBtn = Instance.new("TextButton", Frame)
-CloseBtn.Size = UDim2.new(0, 30, 0, 30)
-CloseBtn.Position = UDim2.new(1, -35, 0, 5)
-CloseBtn.Text = "X"
-CloseBtn.TextColor3 = Color3.new(1, 1, 1)
-CloseBtn.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
-CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.TextScaled = true
-CloseBtn.BorderSizePixel = 0
+local flying = false
+local speed = 40
+local bodyGyro, bodyVelocity
 
-CloseBtn.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
+-- Criar botões na tela
+local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+screenGui.Name = "FlyGUI"
+
+local flyButton = Instance.new("TextButton", screenGui)
+flyButton.Size = UDim2.new(0, 120, 0, 50)
+flyButton.Position = UDim2.new(0.05, 0, 0.8, 0)
+flyButton.Text = "Fly"
+flyButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+flyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+flyButton.TextScaled = true
+flyButton.Font = Enum.Font.SourceSansBold
+flyButton.Visible = true
+
+local stopButton = Instance.new("TextButton", screenGui)
+stopButton.Size = UDim2.new(0, 120, 0, 50)
+stopButton.Position = UDim2.new(0.05, 0, 0.88, 0)
+stopButton.Text = "Stop Fly"
+stopButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+stopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+stopButton.TextScaled = true
+stopButton.Font = Enum.Font.SourceSansBold
+stopButton.Visible = true
+
+-- Funções Fly
+local function startFly()
+    if flying then return end
+    flying = true
+    
+    bodyGyro = Instance.new("BodyGyro")
+    bodyGyro.P = 9e4
+    bodyGyro.Parent = humanoidRootPart
+
+    bodyVelocity = Instance.new("BodyVelocity")
+    bodyVelocity.Velocity = Vector3.zero
+    bodyVelocity.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+    bodyVelocity.Parent = humanoidRootPart
+end
+
+local function stopFly()
+    flying = false
+    if bodyGyro then bodyGyro:Destroy() end
+    if bodyVelocity then bodyVelocity:Destroy() end
+end
+
+-- Conectar botões
+flyButton.MouseButton1Click:Connect(function()
+    startFly()
 end)
 
-local AtivarBtn = Instance.new("TextButton", Frame)
-AtivarBtn.Size = UDim2.new(0, 260, 0, 60)
-AtivarBtn.Position = UDim2.new(0.5, -130, 0.5, -10)
-AtivarBtn.Text = "Ativar ESP"
-AtivarBtn.TextColor3 = Color3.new(1, 1, 1)
-AtivarBtn.BackgroundColor3 = Color3.fromRGB(85, 0, 170)
-AtivarBtn.Font = Enum.Font.GothamBold
-AtivarBtn.TextScaled = true
-AtivarBtn.BorderSizePixel = 0
+stopButton.MouseButton1Click:Connect(function()
+    stopFly()
+end)
 
-local function criarESP(player)
-    if player.Character then
-        if not player.Character:FindFirstChild("ESP_Highlight") then
-            local highlight = Instance.new("Highlight")
-            highlight.Name = "ESP_Highlight"
-            highlight.FillColor = Color3.new(1, 1, 1)
-            highlight.FillTransparency = 0.7
-            highlight.OutlineTransparency = 1
-            highlight.Adornee = player.Character
-            highlight.Parent = player.Character
-        end
+-- Atualizar Fly
+RunService.RenderStepped:Connect(function()
+    if flying and bodyVelocity and bodyGyro then
+        local cam = workspace.CurrentCamera
+        local moveDirection = cam.CFrame.LookVector
 
-        if not player.Character:FindFirstChild("ESP_Nome") then
-            local head = player.Character:FindFirstChild("Head")
-            if head then
-                local billboard = Instance.new("BillboardGui")
-                billboard.Name = "ESP_Nome"
-                billboard.Adornee = head
-                billboard.Size = UDim2.new(0, 200, 0, 50)
-                billboard.StudsOffset = Vector3.new(0, 2, 0)
-                billboard.AlwaysOnTop = true
-                billboard.Parent = player.Character
-
-                local texto = Instance.new("TextLabel", billboard)
-                texto.Size = UDim2.new(1, 0, 1, 0)
-                texto.BackgroundTransparency = 1
-                texto.Text = player.Name
-                texto.TextColor3 = Color3.new(1, 1, 1)
-                texto.TextStrokeTransparency = 0.5
-                texto.TextScaled = true
-                texto.Font = Enum.Font.GothamBold
-            end
-        end
+        bodyVelocity.Velocity = moveDirection * speed
+        bodyGyro.CFrame = cam.CFrame
     end
-end
-
-local function ativarESP()
-    for _, player in pairs(game:GetService("Players"):GetPlayers()) do
-        if player ~= game.Players.LocalPlayer then
-            criarESP(player)
-            player.CharacterAdded:Connect(function()
-                wait(1)
-                criarESP(player)
-            end)
-        end
-    end
-end
-
-AtivarBtn.MouseButton1Click:Connect(ativarESP)
+end)
